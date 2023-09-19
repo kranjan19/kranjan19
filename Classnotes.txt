@@ -1,0 +1,798 @@
+$ git config --global user.name "ADAM M"
+$ git config --global user.email "scmlearningcentre@gmail.com"
+$ git config --global push.default "simple"
+
+Remote Repo: https://gitlab.com/scmlearningcentre/myawesomesep23.git
+
+$ git clone <remote> <local-dir>
+$ git clone https://gitlab.com/scmlearningcentre/myawesomesep23.git test00
+
+Git Workflow
+============
+$ git status
+$ git add <file> or git add .
+$ git commit -m "message"
+$ git log
+$ git log -num --oneline
+$ git show <commitID>
+$ git push
+$ git pull
+
+$ git reset --soft
+$ git reset --mixed
+$ git reset --hard
+
+$ git revert <commitID>
+$ git checkout <commitID>
+
+$ git branch
+$ git checkout <branch>
+$ git branch <branchname>
+
+$ git merge <source> <destination>
+$ git cherry-pick <commitID>
+
+$ git tag -a <name> -m "message" <commitID>
+$ git tag
+
+
+Owner: all access, adminster the group/project (rename,delete), create subgroups, projects, users
+Maintainer: create subgroups, projects, add users, merge approvals
+Developer: clone, push/pull
+Reporter: read-only access
+
+Java Build:
+----------
+$ apt update
+$ apt install -y git
+$ apt install -y openjdk-8-jdk
+$ export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+$ export PATH=/usr/lib/jvm/java-8-openjdk-amd64/bin:$PATH
+$ apt install -y maven
+$ java -version
+$ mvn -version
+
+
+$ git clone https://gitlab.com/scmlearningcentre/mavenbuild.git demobuild 
+$ mvn clean package - Full build
+$ mvn package - Incremental build
+
+Springboot application: 
+$ java -jar <jarfile>
+
+$ sudo cp *.war /opt/wildfly/standalone/deployments
+$ sudo /opt/wildfly/bin/standalone.sh -b 0.0.0.0 -bmanagement 0.0.0.0
+
+$ netstat -an |grep 8080
+$ ps aux | grep java
+
+----NODE PROJECT----
+Build Steps:
+ - there is no compilation
+ - unit test using a framework
+ - create a tar/zip with all the necessary *.js
+
+$ git clone https://gitlab.com/scmlearningcentre/nodebuild.git nodebuild
+$ apt install -y nodejs
+$ node -v
+$ apt install -y npm
+
+Build & Unit test:
+$ npm install mocha --save-dev
+$ npm test -> "mocha --recursive --exit"
+$ tar -cvf samplenode.tar app.js *html
+
+Deploy:
+$ tar -xvf samplenode.tar
+$ npm install --only=production
+$ npm start -> node app.js
+$ netstat -an |grep 8000
+
+EC2 server
+==========
+- AMI (OS)
+- Type (Capacity)
+- key (private password)
+- Network (Security Group)
+- Storage 
+
+Mumbai Region -> Default Network -> Default Security Group
+FQDN - Fully Qualified Domain Name
+
+whoami = the user name
+hostname = machine name
+hostname -i = ip address
+free -m = available memory
+df -kh . = available hard disk
+lscpu = available cpu
+cat /etc/os-release = gives the os details
+sudo su = switch the user to root
+
+Access Key: AKIAWLQIL5DFAUZ2UEHS
+Secret Key: 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
+
+============
+TERRAFORM
+============
+- Prone to errors
+- not scalable
+- not optimized way of using
+- immutable infra
+- not cloud agnostic
+
+IAC:
+ * desired state as a file/code
+ * version the code/file
+ * review & reuse the code/file
+
+$ sudo hostnamectl set-hostname <machinename>
+
+Install through Package:
+ $ curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+ $ sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+ $ sudo apt-get update && sudo apt-get install terraform
+
+Install specific version:
+ $ curl -O https://releases.hashicorp.com/terraform/0.15.2/terraform_0.15.2_linux_amd64.zip https://releases.hashicorp.com/terraform/
+ $ sudo apt install -y unzip
+ $ sudo unzip terraform_0.15.2_linux_amd64.zip -d /usr/local/bin/
+
+------------------TERRAFORM AWS SETUP----------
+1. Passing access/secret key as environment variables
+$ export AWS_ACCESS_KEY_ID=(your access key id)
+$ export AWS_SECRET_ACCESS_KEY=(your secret access key)
+
+2. Passing access/secret key through a credentials file
+Install AWS Cli:
+ $ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+ $ sudo apt install unzip && unzip awscliv2.zip
+ $ sudo ./aws/install --bin-dir /usr/bin --install-dir /usr/bin/aws-cli --update
+ $ aws --version
+
+Configure AWS Cli with Access/Secret Key
+ $ aws configure
+   - creates ~/.aws/credentials file
+
+HCL
+===
+ - HCL(Hashicorp Language)/ *.tf
+ - blocks { }
+ - every block will have a type & a name
+ - every statement should be in a key = value format
+
+
+   provider block
+   --------------
+   Syntax:
+   provider "providername" {
+     key = value
+   }
+
+   resource block
+   --------------
+   Syntax:
+   resource "provider_resourcetype" "name" {
+      key = value
+   }
+
+                                
+Create Infrastructure
+---------------------
+$ mkdir -p terraform/basics
+$ cd terraform/basics
+$ vi main.tf
+
+# Specify the AWS details
+provider "aws" {
+  region = "ap-south-1"
+}
+
+# Specify the EC2 details
+resource "aws_instance" "example" {
+  ami           = "ami-08e5424edfe926b43"
+  instance_type = "t2.micro"
+}
+
+Terraform Workflow
+------------------
+$ terraform init
+$ terraform validate
+$ terraform fmt
+$ terraform plan [-out planfile]
+  + indicates resource creation
+  - indicates resource deletion
+  +/- indicates resource recreation
+  ~ indicates resource modification
+$ terraform apply [planfile] -auto-approve
+$ terraform show
+$ terraform destroy
+
+INTERPOLATION: PROVIDER_RESOURCETYPE.RESOURCENAME.ATTRIBUTES
+
+Modify Infrastructure
+-------------------------
+# Specify the AWS details
+provider "aws" {
+  region = "ap-south-1"
+}
+
+# Specify the EC2 details
+resource "aws_instance" "example" {
+  ami           = "ami-03a933af70fa97ad2"
+  instance_type = "t2.micro"
+}
+
+# Create S3 bucket
+resource "aws_s3_bucket" "example" {
+  # NOTE: S3 bucket names must be unique across _all_ AWS accounts
+  bucket = "wezvatech-adam-demo-s3-sep2023"
+}
+
+$ terraform plan
+$ terraform apply -auto-approve
+$ terraform destroy
+$ terraform destroy -target aws_s3_bucket.example
+
+Implicit Dependency
+===================
+
+# Specify the AWS details
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_eip" "ip" {
+  instance = aws_instance.example.id
+}
+
+resource "aws_instance" "example" {
+  ami           = "ami-0c1a7f89451184c8b"
+  instance_type = "t2.micro"
+}
+
+Explicit Dependency
+===================
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_instance" "example" {
+  ami           = "ami-006d3995d3a6b963b"
+  instance_type = "t2.micro"
+  depends_on = [aws_s3_bucket.example]
+}
+
+# Create S3 bucket
+resource "aws_s3_bucket" "example" {
+  bucket = "wezvatech-adam-demo-s3-sepoct2023"
+}
+
+$ terraform destroy -target aws_instance.example
+- deletes both the parent & the dependent child resources if we delete parent
+- deletes only child if we delete child resource
+
+TFSTATE File
+============
+* By default Terraform will create a local state file in the same workspace
+* This is what acts as the actual state, whereas the *.tf files gives the desired state
+
+$ vi backend.tf
+terraform{
+  backend "s3" {
+     bucket = "wezvatech-adam-demo-s3-sepoct2023"
+     key = "default/terraform.tfstate" # path & file which will hold the state #
+     region = "ap-south-1"
+  }
+}
+
+DataSource
+==========
+* This block is used to only read data from a provider
+* data block will return error if the data is not there
+
+Interpolation: DATA.DATASOURCETYPE.NAME.ATTRIBUTES
+
+Syntax:
+data "provider_datatype" "name" {
+   key = value
+}
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+data "aws_availability_zones" "example" {
+    state = "available"
+}
+
+output "azlist" {
+    value = data.aws_availability_zones.example.names
+}
+
+data "aws_instances" "test" {
+  filter {
+    name = "instance-type"
+    values = ["t2.micro","t2.small"]
+  }
+
+  instance_state_names = ["running", "stopped"]
+}
+
+output "machinelist" {
+    value = data.aws_instances.test.private_ips[0]
+}
+
+VARIABLES
+=========
+* User Variables & Output Variables
+* User variables type:
+ - string (default) - var.variablename ex: var.amiid
+ - numeric          
+ - list/array       - var.variablename[indexnumber] ex: var.amiid[0]
+ - map/hash         - var.variablename[keyname] ex: var.image_name["centos"]
+
+
+Syntax:
+-------
+variable "name" {
+   default = "defaultvalue"
+}
+
+String variables:
+----------------
+provider "aws" {
+  region = "ap-south-1"
+}
+
+variable "amiid" {
+  default = "ami-006d3995d3a6b963b"
+}
+
+variable "type" {
+  default = "t2.micro"
+}
+
+resource "aws_instance" "example" {
+  ami           = var.amiid
+  instance_type = var.type
+}
+	
+
+$ terraform plan -var "amiid=ami-0c6615d1e95c98aca" -var "type=t2.medium"
+$ terraform apply -auto-approve -var "amiid=ami-0c6615d1e95c98aca" -var "type=t2.medium"
+$ terraform destroy -var "amiid=ami-0c6615d1e95c98aca" -var "type=t2.medium"
+------New method for destroying from V0.15-------------
+$ terraform plan -var "amiid=ami-0c6615d1e95c98aca" -var "type=t2.medium" -out testplan
+$ terraform apply -auto-approve testplan
+
+$ terraform plan -var "amiid=ami-0c6615d1e95c98aca"  -var "type=t2.medium" -out destroyplan -destroy
+$ terraform apply -auto-approve destroyplan
+
+ -- passing values through a file to variables --
+- vi vars.tfvars
+   amiid = "ami-0c6615d1e95c98aca"
+   type = "t2.medium"
+
+$ terraform plan -var-file=vars.tfvars -out testplan3
+$ terraform apply -auto-approve testplan3
+
+$ terraform plan -var-file=vars.tfvars -out testplan4 -destroy
+$ terraform apply -auto-approve testplan4
+
+List variables:
+---------------
+provider "aws" {
+  region = "ap-south-1"
+}
+
+variable "amiid" {
+    type    = list
+    default = ["ami-0c6615d1e95c98aca", "ami-0c1a7f89451184c8b"]
+                  Index-0                 Index-1
+}    
+     
+variable "indexno" {
+  default = 0
+}             
+
+resource "aws_instance" "example" {
+  ami           = var.amiid[var.indexno]
+  instance_type = "t2.micro"
+}
+
+$ terraform plan -var "indexno=1" -out testplan
+$ terraform apply -auto-approve testplan
+
+$ terraform plan -var "indexno=1" -out testplan2 -destroy
+$ terraform apply -auto-approve testplan2
+
+MAP variables:
+-------------
+provider "aws" {
+  region = "ap-south-1"
+}
+
+variable "amiid" {
+    type    = map
+    default = {
+       "centos7" = "ami-0c6615d1e95c98aca"
+       "ubuntu" = "ami-0c1a7f89451184c8b"
+    }
+}
+
+variable "key" {
+  default = "ubuntu"
+}
+
+resource "aws_instance" "example" {
+  ami           = var.amiid[var.key]
+  instance_type = "t2.micro"
+}
+
+$ terraform plan -var "key=centos" -out testplan
+$ terraform apply -auto-approve testplan
+
+$ terraform plan -var "key=centos" -out testplan2 -destroy
+$ terraform apply -auto-approve testplan2
+
+OUTPUT variables
+================
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+data "aws_availability_zones" "example" {
+    state = "available"
+}
+
+output "azlist" {
+    value = data.aws_availability_zones.example.names
+}
+
+Import
+======
+* Importing details of resources which are managed outside the terraform
+* First add respective resource blocks to your desired state
+* Import the existing details into the state file
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+# Specify the EC2 details
+resource "aws_instance" "example1" {
+  ami           = "ami-03a933af70fa97ad2"
+  instance_type = "t2.micro"
+}
+
+resource "aws_instance" "example2" {
+  ami           = "ami-03a933af70fa97ad2"
+  instance_type = "t2.micro"
+}
+
+$ terraform import aws_instance.example2 i-0256dbffaad2d67d7
+
+
+Modules
+=======
+* Reuse the code
+* flexibility in using the code
+
+Instance module
+------------------
+$ mkdir -p modules/instance
+$ vi main.tf
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_instance" "example" {
+  ami           = var.amiid
+  instance_type = var.type
+}
+
+$ vi variables.tf
+variable "amiid" {
+  default = "ami-0c1a7f89451184c8b"
+}
+
+variable "type" {
+  default = "t2.micro"
+}
+
+$ vi output.tf
+output "id" {
+  value = aws_instance.example.id
+}
+
+EIP module
+----------
+$ mkdir -p modules/eip
+$ vi main.tf
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_eip" "ip" {
+  instance = var.instanceid
+}
+
+$ vi variables.tf
+
+variable "instanceid" {
+}
+
+---Root Module---
+$ cd rootmod
+$ vi main.tf
+module "instance" {
+  source = "../modules/instance"
+  amiid = var.instance_amiid
+  type = var.instance_type
+}
+
+module "eip" {
+   source = "../modules/eip"
+   instanceid = module.instance.id
+}
+
+$ vi variables.tf
+variable "instance_amiid" {
+  default = "ami-006d3995d3a6b963b"
+}
+
+variable "instance_type" {
+  default = "t2.micro"
+}
+
+Built-In functions
+==================
+$ terraform console
+max(1,31,12)
+upper("hello")
+split("a", "tomato")
+substr("hello world", 1, 4)
+index(["a", "b", "c"], "b")
+length("adam")
+length(["a", "b"])
+lookup({a="1", b="2"}, "a", "novalue")
+
+Loops
+=====
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_iam_user" "example" {
+  name = "adam"
+}
+
+======Count keyword=====
+provider "aws" {
+  region = "ap-south-1"
+}
+
+variable "user_names" {
+  description = "Create IAM users with these names"
+  type        = list(string)
+  default     = ["mahesh","praveen","syed","sai","ramesh","virat"]
+}
+
+resource "aws_iam_user" "example" {
+  count = length(var.user_names)
+  name  = var.user_names[count.index] 
+}
+
+=========for_each keyword=====
+* for_each runs the resource block as a Map
+* provider_resourcetype.resourcename["each.value"]
+
+variable "user_names" {
+  description = "Create IAM users with these names"
+  type        = list(string)
+  default     = ["joy","jacob","phani","karthick","raviraj","vijay"]
+}
+
+resource "aws_iam_user" "example" {
+  for_each = toset(var.user_names)
+  name     = each.value
+}
+
+Conditions
+==========
+* Default value for count is 1, if count is > 1 then it loops the block
+* If count is 0 then the block will be skipped
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_iam_user" "example" {
+  name = "adam"
+  count = 0
+}
+
+-----------Ternary operator-----------
+provider "aws" {
+  region = "ap-south-1"
+}
+
+variable "con" {
+   default = "0"
+}
+
+resource "aws_iam_user" "example2" {
+  count = var.con ? 1 : 2       # expression ? <true_value> : <false_value>
+  name  = "example2"
+}
+
+# expression 0 is false, expression 1 is true
+
+Provisioners
+============
+# If we want to do some initial configuration the server
+# If we want to copy some files to the server
+# If we want to run some command or script inside the server
+# If we want to run some command or script on the terraform core server
+- Provisioner blocks are child blocks for resource blocks
+
+Resource:
+ * creation time provisioner (default)
+   - first resource will get created
+   - provisioner will be called
+ * destroy time provisioner
+   - provisioner will be called first
+   - resource will be destroyed at last
+
+Local-exec Provisioner
+----------------------
+provider "aws" {
+  region = "ap-south-1"
+}
+
+# Specify the EC2 details
+resource "aws_instance" "example" {
+  ami           = "ami-0c1a7f89451184c8b"
+  instance_type = "t2.micro"
+ 
+  provisioner "local-exec" {
+    command = "echo ${aws_instance.example.private_ip} >> private_ips.txt"
+  }
+  provisioner "local-exec" {
+    command = "exit 1"
+    on_failure = continue
+  }
+  provisioner "local-exec" {
+    when = destroy
+    command = "rm private_ips.txt"
+  }  
+}
+
+FILE PROVISIONER
+-----------------
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_instance" "example" {
+  ami           = "ami-0c1a7f89451184c8b"
+  instance_type = "t2.micro"
+  key_name      = "mastersep23"
+
+  provisioner "file" {
+    source      = "test.conf"
+    destination = "/tmp/myapp.conf"
+  }
+
+  connection {
+    type     = "ssh"
+    user     = "ubuntu"
+    private_key = file("mastersep23.pem")
+    host     = self.public_ip
+  }
+}
+
+REMOTE-EXEC
+-----------
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_instance" "example" {
+  ami           = "ami-0c1a7f89451184c8b"
+  instance_type = "t2.micro"
+  key_name      = "mastersep23"
+
+  provisioner "local-exec" {
+    command    = "echo 'while true; do echo hi-students; sleep 5; done' > myscript.sh"
+  }
+ 
+  provisioner "file" {
+    source      = "myscript.sh"
+    destination = "/tmp/myscript.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/myscript.sh",
+      "nohup /tmp/myscript.sh 2>&1 &",
+    ]
+  }
+
+  connection {
+    type     = "ssh"
+    user     = "ubuntu"
+    private_key = file("mastersep23.pem")
+    host     = self.public_ip
+  }
+}
+
+NULL RESOURCE
+-------------
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "null_resource" "dummy" {
+  provisioner "local-exec" {
+    command = "touch MYFILE"
+  }
+}
+
+Best Practices
+==============
+1) Version control the changes - Environment based branching
+2) Multiple user accounts on AWS
+  - dev account for our devops development activities
+  - ops admin account for QA environment
+  - stage & prod admin account for production environment
+
+3) Use Specific version info & required providers - terraform.tf
+  terraform {
+    required_providers {
+      aws = {
+         source = "hasicorp/aws"
+         version = "~> 1.0"
+      }
+    }
+   }
+
+4) Use profiles & Alias
+
+[profilename]
+accessid=
+secretid=
+region=
+
+provider "aws" {
+  region = "ap-south-1"
+  profile = var.profile_name    # Access/Secret Key rereferred from ~/.aws/credentials #
+  alias = "mumbai"
+}
+	
+provider "aws" {
+  alias  = "virginia"               # Alias name for reference #
+  region = "us-east-1"
+  profile = "prod"
+}
+
+resource "aws_instance" "example" {
+  ami           = "ami-0742b4e673072066f"
+  instance_type = "t2.micro"
+  provider = aws.mumbai                 # Alias name to pick the provider #
+}
+resource "aws_instance" "example1" {
+  ami           = "ami-0742b4e673072066f"
+  instance_type = "t2.micro"
+  provider = aws.virginia               # Alias name to pick the provider #
+}
+
+5) DRY principle - use variables & modules
+6) Use remote state file & state-lock
+
+7) Manage terraform logs (Log level: Info, Debug, Warn, Error, Trace)
+$ export TF_LOG=TRACE
+$ export TF_LOG_PATH=/tmp/terraformlog.txt
+
+8) Dynamic Secrets
