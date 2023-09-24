@@ -796,3 +796,228 @@ $ export TF_LOG=TRACE
 $ export TF_LOG_PATH=/tmp/terraformlog.txt
 
 8) Dynamic Secrets
+
+# List the allowed instance type on a particular AZ
+$  aws ec2 describe-instance-type-offerings \
+    --location-type availability-zone \
+    --filters Name=location,Values=ap-south-1c \
+    --region ap-south-1 --output table
+
+=======
+ANSIBLE
+=======
+
+- Controller:
+$ sudo apt update 
+$ sudo apt install -y ansible
+$ which ansible
+$ ansible --version
+
+
+- Target Node:
+$ sudo apt update
+$ sudo apt install -y python3
+$ which python3
+$ python3 --version
+
+Inventory: /etc/ansible/hosts
+---------
+[groupname]
+<MachineName> ansible_host=<<ec2-private-ip>> ansible_user=<<ec2-user>> ansible_ssh_private_key_file=/location/of/the/keypair/your-key.pem
+
+[demo]
+node1 ansible_host=172.31.13.47 ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/masterjul23.pem
+
+[wezvatech]
+master ansible_host=172.31.33.78 ansible_user=ubuntu ansible_ssh_private_key_file=/home/ubuntu/masterjul23.pem
+
+$ sudo hostnamectl set-hostname <machinename>
+$ sudo cp hosts.cfg /etc/ansible/hosts
+
+Host-Pattern
+============
+$ ansible demo -m ping
+$ ansible wezvatech -m ping
+$ ansible node1 -m ping
+$ ansible node1,master -m ping
+$ ansible demo,master -m ping
+$ ansible demo[0] -m ping
+$ ansible all -m ping
+$ ansible all -m ping --limit "node1"
+
+ADHOC CMDS - to run a single task at a time
+==========
+$ ansible <HostPattern> -b -m <module> -a <Arbituary Options|OS-CMD>
+    hostpattern - server|group|all
+    task - module(python) + desired state
+
+$ ansible demo -m copy -a "src=dummyfile dest=/tmp/dummyfile"
+$ ansible demo -m copy -a "src=dummyfile dest=dummyfile"
+$ ansible demo -b -m package -a "name=git state=present"
+                                          present/absent/latest
+$ ansible demo -b -m package -a "name=apache2 state=present"
+$ ansible demo -b -m service -a "name=apache2 state=started"
+                                          started/stopped/restarted
+  # sudo systemctl status apache2
+  # netstat -an | grep 80
+  # curl localhost:80
+$ ansible demo -b -m user -a "name=testuser state=absent"
+  # id testuser
+$ ansible demo -m command -a "ls /tmp"
+
+$ ansible demo -m shell -a "ls /tmp | wc -l"
+   # when you need to use shell functions like pipe or redirection or background
+$ ansible demo -b -m command -a "apt update"
+
+SYNTAX:
+======
+--- # defining a ansible play
+- hosts: <hostpattern>  # begins your target section
+  become: <yes/no>      # default is no
+  connection: <ssh/winrm/local> # defaults to ssh
+  become_user: <username> # defaults to the user in the inventory file
+  gather_facts: <yes/no> # defaults to yes
+  vars:
+     <variablename>: <value>
+     <variablename>: <value>
+  tasks:
+  - name: <Name-for-task1>
+    <module>: <arbituary options>
+  - name: <Name-for-task2>
+    <module>: <arbituary options>
+    register: <variablename>
+    notify: <Name-for-task>
+  handlers:
+  - name: <Name-for-task>
+    <module>: <arbituary options>
+
+Execute a playbook
+==================
+$ ansible-playbook <playbook>.yml 
+# running in verbose mode
+$ ansible-playbook <playbook>.yml -vvvv
+# run in dry-run mode
+$ ansible-playbook <playbook>.yml --check
+
+
+Example: # ansible demo -b -m package -a "name=apache2 state=present"
+=======
+--- # Basics
+- hosts: demo
+  become: yes
+  tasks:
+  - name: Install Apache
+    package: name=apache2 state=present
+  - name: Start Apache
+    service: name=apache2 state=started
+
+--- # Handlers
+- hosts: demo
+  become: yes
+  tasks:
+  - name: Install Apache
+    package: name=apache2 state=present
+    notify: Restart Server
+  - name: Start Apache
+    service: name=apache2 state=restarted
+    notify: Restart Server
+  handlers:
+  - name: Restart Server
+    command: echo "reboot"
+
+--- # Multiple Handlers
+- hosts: demo
+  become: yes
+  tasks:
+  - name: Install Apache
+    package: name=apache2 state=present
+    notify: handler2
+  - name: Start Apache
+    service: name=apache2 state=restarted
+    notify: Restart Server
+  handlers:
+  - name: Restart Server
+    command: echo "reboot"
+  - name: handler2
+    command: echo "handler2"
+
+Variables
+=========
+* Reference used to store & retrieve a value, which can be reused and change values dynamically
+* Define a variable:       variablename: value
+* Retrieve value:          {{ variablename }}
+
+Variable Scope
+--------------
+* Play: scope is local to playbook or roles
+* Global: scope to all playbooks calling a inventory group
+* Host: scope to all playbook calling a particular host
+
+--- # Variable example
+- hosts: demo
+  become: yes
+  vars:
+    pkg: apache2
+    stp: present
+    sts: started
+  tasks:
+  - name: Install {{pkg}}
+    package: name={{pkg}} state={{stp}}
+  - name: Start {{pkg}}
+    service: name={{pkg}} state={{sts}}
+
+Defining variables at runtime
+-----------------------------
+$ ansible-playbook playbook.yml -e "varname=value"
+
+Register Variable
+-----------------
+* Capture the return output from module
+
+---  # Register variable example
+- hosts: demo
+  tasks:
+  - name: print
+    command: echo HI
+    register: output         # output is a variable name
+  - debug: var=output
+  - debug: var=output.stdout # variable.attribute
+  - debug: var=output.rc
+
+Facts
+-----
+$ ansible demo -m setup
+
+--- # Print Ansible_Facts variables
+- hosts: demo
+  tasks:
+  - name: print ansible facts
+    debug: 
+      var: ansible_facts 
+
+---
+- hosts: demo
+  tasks:
+  - name: print OS Family
+    command: echo {{ansible_os_family}}
+    register: gather
+  - debug: var=gather.stdout
+
+What is Ansible Set_Fact?
+------------------------
+Using set_fact, we can store the value after preparing it on the fly using certain task like using filters or taking subpart of another variable.
+
+---
+- hosts: demo
+  vars:
+     myname: Adam
+  tasks:
+  - name: print name
+    command: echo {{myname}}
+    register: output
+  - name: set fact variable
+    set_fact: testvar={{output.stdout}}
+  - name: Create file
+    file:
+      path: /tmp/{{testvar}}
+      state: touch
